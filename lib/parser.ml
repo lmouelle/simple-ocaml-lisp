@@ -2,12 +2,12 @@ open Angstrom
 
 (*
   Sexp: Atom | ( Sexp* )
-  Atom: Number | Symbol
+  Atom: Number | Symbol | Boolean
   Number: \d+
   Symbol: \D+
 *)
 
-type sexp = Number of int | Symbol of string | List of sexp list
+type sexp = Number of int | Symbol of string | Boolean of bool | List of sexp list
 
 let is_number_char = function '0' .. '9' -> true | _ -> false
 
@@ -21,7 +21,12 @@ let symbol = take_while1 is_symbol_char >>= fun s -> return @@ Symbol s
 
 let number = take_while1 is_number_char >>= fun s -> return @@ Number (int_of_string s)
 
-let atom = number <|> symbol
+let boolean = char '#' *> (char 'f' <|> char 't') >>= function
+| 't' -> return @@ Boolean true
+| 'f' -> return @@ Boolean false
+| _ -> fail "this should never happen"
+
+let atom = number <|> boolean <|> symbol
 
 let sexp = fix (fun sexp ->
     let list = char '(' *> many sexp <* char ')' >>= fun l -> return @@ List l in
