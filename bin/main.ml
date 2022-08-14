@@ -7,6 +7,7 @@ let rec repl env =
   match parse input with
   | Error msg -> Printf.eprintf "Error parsing string: %s" msg
   | Ok sexp ->
+    try
     (
       let result, env' = eval sexp env in
       let result_string = sexp_to_string result in
@@ -14,7 +15,10 @@ let rec repl env =
       print_newline ();
       repl env';
     )
-  
+    with NoSuchVariable s ->
+      print_string @@ "No such variable " ^ s ^ "defined";
+      print_newline ();
+;;
     
 let () =
   repl [] ;;   
