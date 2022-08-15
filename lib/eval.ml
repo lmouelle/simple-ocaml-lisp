@@ -42,4 +42,8 @@ let rec eval sexp (env : environment) =
   | List (Symbol "env" :: []) ->
     let f = List.map (fun (name, value) -> List [Symbol name; value]) env in
     (List f, env)
+  | List (Symbol "pair" :: exp1 :: exp2 :: []) ->
+    let evaled_exp1, _ = eval exp1 env in
+    let evaled_exp2, _ = eval exp2 env in
+    List [evaled_exp1; evaled_exp2], env
   | _ ->  (sexp, env)
