@@ -25,10 +25,7 @@ and exp = (* Parser portion *)
 | And of exp * exp
 | Or of exp * exp
 | Call of exp * exp list
-| Definition of def
-and def =
-| Value of string * exp
-| Expression of exp
+| Definition of string * exp
 
 let is_number_char = function '0' .. '9' -> true | _ -> false
 
@@ -72,7 +69,7 @@ let rec built_ast sexp =
   | List [Symbol "or"; exp1; exp2] ->
     Or (built_ast exp1, built_ast exp2)
   | List [Symbol "define"; Symbol s; e] ->
-    Definition (Value (s, built_ast e))
+    Definition (s, built_ast e)
   | List (fn :: args) ->
     Call (built_ast fn, List.map built_ast args)
   | List _ -> Literal sexp
