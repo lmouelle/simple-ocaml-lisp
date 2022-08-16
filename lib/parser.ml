@@ -7,7 +7,12 @@ open Angstrom
   Symbol: \D+
 *)
 
-type sexp = Number of int | Symbol of string | Boolean of bool | List of sexp list
+type procedure = {
+  name : string;
+  body : sexp list -> sexp
+}
+
+and sexp = Number of int | Symbol of string | Boolean of bool | Procedure of procedure | List of sexp list
 
 let is_number_char = function '0' .. '9' -> true | _ -> false
 
