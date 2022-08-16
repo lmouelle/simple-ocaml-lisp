@@ -16,9 +16,14 @@ let rec repl env =
       repl env';
     )
     with NoSuchVariable s ->
-      print_string @@ "No such variable " ^ s ^ "defined";
+      print_string @@ "No such variable " ^ s ^ " defined";
       print_newline ();
+      repl env
+    | SyntaxError s ->
+      print_string s;
+      print_newline ();
+      repl env
 ;;
     
 let () =
-  repl [] ;;   
+  repl prelude_environment ;;   
