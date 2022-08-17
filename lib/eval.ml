@@ -4,11 +4,12 @@ exception SyntaxError of string
 exception NoSuchVariable of string
 
 let rec sexp_to_string = function
-| Number n -> string_of_int n;
-| Symbol s -> s;
+| Number n -> string_of_int n
+| Symbol s -> s
 | Boolean b -> if b then "#t" else "#f"
 | Procedure {name; _} -> "#" ^ name
 | Quote s -> "'" ^ s
+| Closure _ -> "##closure"
 | List l -> 
   let rec listjoin = function
   | [] -> ""
@@ -85,8 +86,14 @@ let rec eval expr env =
       | Procedure {body; _} -> 
         let evaled_args = List.map evalexpr args in
         body evaled_args
+      | Closure (params, body, closure_env) ->
+        let evaled_args = List.map evalexpr args in
+        let params_env = List.combine params evaled_args in
+        let result, _ = eval body (params_env @ closure_env) in
+        result
       | _ -> raise @@ SyntaxError "fun args*"
     end
+  | Lambda (args, body) -> Closure (args, body, env)
   | Definition _ -> failwith "This should never happen"
   in
   match expr with

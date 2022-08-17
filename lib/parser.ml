@@ -11,7 +11,7 @@ type procedure = {
   name : string;
   body : sexp list -> sexp
 }
-
+and environment = (string * sexp) list
 and sexp =  (* Lexer portion *)
 | Number of int 
 | Symbol of string 
@@ -19,6 +19,7 @@ and sexp =  (* Lexer portion *)
 | Procedure of procedure 
 | Quote of string
 | List of sexp list
+| Closure of string list * exp * environment
 and exp = (* Parser portion *)
 | Literal of sexp
 | Variable of string
@@ -27,6 +28,7 @@ and exp = (* Parser portion *)
 | Or of exp * exp
 | Call of exp * exp list
 | Definition of string * exp
+| Lambda of string list * exp
 
 let is_number_char = function '0' .. '9' -> true | _ -> false
 
@@ -63,6 +65,7 @@ exception AstError of string
 let rec built_ast sexp = 
   match sexp with
   | Procedure _ -> raise @@ AstError "Cannot build ast from procedure"
+  | Closure _ -> raise @@ AstError "Cannot built ast from closure"
   | Quote _ | Number _ | Boolean _ -> Literal sexp
   | Symbol s -> Variable s
   | List [Symbol "if"; cond; iftrue; iffalse] ->
@@ -73,6 +76,13 @@ let rec built_ast sexp =
     Or (built_ast exp1, built_ast exp2)
   | List [Symbol "define"; Symbol s; e] ->
     Definition (s, built_ast e)
+  | List [Symbol "lambda"; List params; body] ->
+    let paramnames = List.map (
+      function 
+      | Symbol s -> s 
+      | _ -> raise @@ AstError "Cannot make closure args from non symbol") params in
+    Lambda (paramnames, built_ast body)
   | List (fn :: args) ->
     Call (built_ast fn, List.map built_ast args)
-  | List _ -> Literal sexp
+  | List [] -> Literal sexp
+    
