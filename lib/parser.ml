@@ -17,6 +17,7 @@ and sexp =  (* Lexer portion *)
 | Symbol of string 
 | Boolean of bool 
 | Procedure of procedure 
+| Quote of string
 | List of sexp list
 and exp = (* Parser portion *)
 | Literal of sexp
@@ -44,7 +45,9 @@ let boolean = char '#' *> (char 'f' <|> char 't') >>= function
 | 'f' -> return @@ Boolean false
 | _ -> fail "this should never happen"
 
-let atom = number <|> boolean <|> symbol
+let quote = char '\'' *> take_while1 is_symbol_char >>= fun s -> return @@ Quote s
+  
+let atom = number <|> boolean <|> quote <|> symbol
 
 let sexp = fix (fun sexp ->
     let list = char '(' *> many sexp <* char ')' >>= fun l -> return @@ List l in
@@ -60,7 +63,7 @@ exception AstError of string
 let rec built_ast sexp = 
   match sexp with
   | Procedure _ -> raise @@ AstError "Cannot build ast from procedure"
-  | Number _ | Boolean _ -> Literal sexp
+  | Quote _ | Number _ | Boolean _ -> Literal sexp
   | Symbol s -> Variable s
   | List [Symbol "if"; cond; iftrue; iffalse] ->
     If (built_ast cond, built_ast iftrue, built_ast iffalse)

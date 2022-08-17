@@ -8,6 +8,7 @@ let rec sexp_to_string = function
 | Symbol s -> s;
 | Boolean b -> if b then "#t" else "#f"
 | Procedure {name; _} -> "#" ^ name
+| Quote s -> "'" ^ s
 | List l -> 
   let rec listjoin = function
   | [] -> ""
@@ -35,6 +36,7 @@ let prelude_environment =
 
 let rec eval expr env =
   let rec evalexpr = function
+  | Literal (Quote q) -> Quote q
   | Literal l -> l
   | Variable name ->
     begin
@@ -75,7 +77,8 @@ let rec eval expr env =
         end
       | _ -> raise @@ SyntaxError "and a b"
     end
-  | Call (Variable "env", []) -> List (List.map (fun (_, b) -> b) env)
+  | Call (Variable "env", []) -> 
+     List (List.map (fun (name, body) -> List [Symbol name; body]) env)
   | Call (exp, args) ->
     begin
       match evalexpr exp with
