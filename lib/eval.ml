@@ -7,7 +7,7 @@ let rec sexp_to_string = function
 | Number n -> string_of_int n;
 | Symbol s -> s;
 | Boolean b -> if b then "#t" else "#f"
-| Procedure {name; _} -> name
+| Procedure {name; _} -> "#" ^ name
 | List l -> 
   let rec listjoin = function
   | [] -> ""
