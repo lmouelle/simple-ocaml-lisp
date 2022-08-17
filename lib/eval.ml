@@ -28,12 +28,48 @@ let prelude_environment =
     let value = List.fold_left (+) 0 unwrapped_nums in
     Number value
   in
+  let minus = function
+  | [Number lhs; Number rhs] ->Number (lhs - rhs)
+  | _ -> raise @@ SyntaxError "- 1 2"
+  in
+  let multiply = function
+  | [Number lhs; Number rhs] -> Number (lhs * rhs)
+  | _ -> raise @@ SyntaxError "* 1 2"
+  in
+  let divide = function
+  | [Number lhs; Number rhs] -> Number (lhs / rhs)
+  | _ -> raise @@ SyntaxError "/ 1 2"
+  in
   let list = function
   | [] -> raise @@ SyntaxError "list exp1 exp2"
   | args -> List args
   in
+  let first = function
+  | [] -> raise @@ SyntaxError "argument required"
+  | head :: _ -> head
+  in
+  let rest = function
+  | [] -> raise @@ SyntaxError "argument required"
+  | _ :: tail -> List tail
+  in
+  let isatom = function
+  | [List _] -> Boolean false
+  | [_] -> Boolean true
+  | _ -> raise @@ SyntaxError "(atom? term)"
+  in
+  let equals = function
+  | [lhs; rhs] -> Boolean (lhs = rhs)
+  | _ -> raise @@ SyntaxError "(= lhs rhs)"
+  in
   ["+", Primitive {name = "+"; body = plus};
-   "list", Primitive {name = "list"; body = list}]
+   "-", Primitive {name = "-"; body = minus};
+   "*", Primitive {name = "*"; body = multiply};
+   "/", Primitive {name = "/"; body = divide};
+   "list", Primitive {name = "list"; body = list};
+   "first", Primitive {name = "first"; body = first};
+   "rest", Primitive {name = "rest"; body = rest};
+   "atom?", Primitive {name = "atom?"; body = isatom};
+   "=", Primitive {name = "="; body = equals}]
 
 let rec eval expr env =
   let rec evalexpr = function
