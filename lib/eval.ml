@@ -61,6 +61,14 @@ let prelude_environment =
   | [lhs; rhs] -> Boolean (lhs = rhs)
   | _ -> raise @@ SyntaxError "(= lhs rhs)"
   in
+  let greater = function
+  | [Number lhs; Number rhs] -> Boolean (lhs > rhs)
+  | _ -> raise @@ SyntaxError "> 1 2"
+  in
+  let lesser = function 
+  | [Number lhs; Number rhs] -> Boolean (lhs < rhs)
+  | _ -> raise @@ SyntaxError "< 2 1"
+  in
   ["+", Primitive {name = "+"; body = plus};
    "-", Primitive {name = "-"; body = minus};
    "*", Primitive {name = "*"; body = multiply};
@@ -69,7 +77,9 @@ let prelude_environment =
    "first", Primitive {name = "first"; body = first};
    "rest", Primitive {name = "rest"; body = rest};
    "atom?", Primitive {name = "atom?"; body = isatom};
-   "=", Primitive {name = "="; body = equals}]
+   "=", Primitive {name = "="; body = equals};
+   ">", Primitive {name = ">"; body = greater};
+   "<", Primitive {name = "<"; body = lesser}]
 
 let rec eval expr env =
   let rec evalexpr = function
