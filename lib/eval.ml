@@ -3,8 +3,6 @@ open Parser
 exception SyntaxError of string
 exception NoSuchVariable of string
 
-type environment = (string * sexp) list
-
 let rec sexp_to_string = function
 | Number n -> string_of_int n;
 | Symbol s -> s;
@@ -35,35 +33,61 @@ let prelude_environment =
   ["+", Procedure {name = "+"; body = plus};
    "list", Procedure {name = "list"; body = list}]
 
-let rec eval sexp (env : environment) =
-  match sexp with
-  | Number n -> Number n, env
-  | Symbol s ->
-    (try 
-      let subsexp = List.assoc s env in
-      eval subsexp env
-    with Not_found -> raise @@ NoSuchVariable s)
-  | Boolean b -> (Boolean b, env)
-  | Procedure {name; body} -> Procedure {name; body}, env
-  | List (Symbol "if" :: cond :: iftrue :: iffalse :: []) -> 
-      let condval, _  = eval cond env in
-      let resultval = match condval with
-      | Boolean true -> iftrue
-      | Boolean false -> iffalse
-      | _ -> raise @@ SyntaxError "(if bool exp1 exp2)"
-      in
-      eval resultval env
-  | List (Symbol "define" :: Symbol symbol :: expression :: []) ->
-    let symbol_value, _ = eval expression env in
-    let env' = (symbol, symbol_value) :: env in
-    symbol_value, env'
-  | List (Symbol "quote" :: expr :: []) -> Symbol (sexp_to_string expr), env
-  | List (Symbol "env" :: []) ->
-    let f = List.map (fun (name, value) -> List [Symbol name; value]) env in
-    (List f, env)
-  | List [] -> List [], env
-  | List (name :: args) ->
-    let evaled_fun, _ = eval name env in
-    match evaled_fun with
-    | Procedure {body; _} -> body args, env
-    | _ -> raise @@ SyntaxError "(apply fun args)"
+let rec eval expr env =
+  let rec evalexpr = function
+  | Literal l -> l
+  | Variable name ->
+    begin
+      try
+         List.assoc name env
+      with Not_found -> raise @@ NoSuchVariable name
+    end
+  | If (c, t, f) ->
+    begin
+      match evalexpr c with
+      | Boolean true -> evalexpr t
+      | Boolean false -> evalexpr f
+      | _ -> raise @@ SyntaxError "if bool iftrue iffalse"
+    end
+  |Or (c1, c2) ->
+    begin
+      match evalexpr c1 with
+      | Boolean true -> Boolean true
+      | Boolean false -> 
+        begin
+          match evalexpr c2 with 
+          | Boolean true -> Boolean true
+          | Boolean false -> Boolean false
+          | _ -> raise @@ SyntaxError "or a b"
+        end
+      | _-> raise @@ SyntaxError "or a b"
+    end
+  | And (c1, c2) ->
+    begin
+      match evalexpr c1 with
+      | Boolean false -> Boolean false
+      | Boolean true ->
+        begin
+          match evalexpr c2 with
+          | Boolean true -> Boolean true
+          | Boolean false -> Boolean false
+          | _ -> raise @@ SyntaxError "and a b"
+        end
+      | _ -> raise @@ SyntaxError "and a b"
+    end
+  | Call (Variable "env", []) -> List (List.map (fun (_, b) -> b) env)
+  | Call (exp, args) ->
+    begin
+      match evalexpr exp with
+      | Procedure {body; _} -> 
+        let evaled_args = List.map evalexpr args in
+        body evaled_args
+      | _ -> raise @@ SyntaxError "fun args*"
+    end
+  | Definition _ -> failwith "This should never happen"
+  in
+  match expr with
+  | Definition (name, body) ->
+    let expr_evaled, _ = eval body env in
+    expr_evaled, (name, expr_evaled) :: env
+  | _ -> evalexpr expr, env

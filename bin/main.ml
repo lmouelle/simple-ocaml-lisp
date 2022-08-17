@@ -9,7 +9,7 @@ let rec repl env =
   | Ok sexp ->
     try
     (
-      let result, env' = eval sexp env in
+      let result, env' = eval (built_ast sexp) env in
       let result_string = sexp_to_string result in
       print_string result_string;
       print_newline ();
