@@ -7,7 +7,7 @@ let rec sexp_to_string = function
 | Number n -> string_of_int n
 | Symbol s -> s
 | Boolean b -> if b then "#t" else "#f"
-| Procedure {name; _} -> "#" ^ name
+| Primitive {name; _} -> "#" ^ name
 | Quote s -> "'" ^ s
 | Closure _ -> "##closure"
 | List l -> 
@@ -32,8 +32,8 @@ let prelude_environment =
   | [] -> raise @@ SyntaxError "list exp1 exp2"
   | args -> List args
   in
-  ["+", Procedure {name = "+"; body = plus};
-   "list", Procedure {name = "list"; body = list}]
+  ["+", Primitive {name = "+"; body = plus};
+   "list", Primitive {name = "list"; body = list}]
 
 let rec eval expr env =
   let rec evalexpr = function
@@ -83,7 +83,7 @@ let rec eval expr env =
   | Call (exp, args) ->
     begin
       match evalexpr exp with
-      | Procedure {body; _} -> 
+      | Primitive {body; _} -> 
         let evaled_args = List.map evalexpr args in
         body evaled_args
       | Closure (params, body, closure_env) ->

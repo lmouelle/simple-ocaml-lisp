@@ -16,7 +16,7 @@ and sexp =  (* Lexer portion *)
 | Number of int 
 | Symbol of string 
 | Boolean of bool 
-| Procedure of procedure 
+| Primitive of procedure 
 | Quote of string
 | List of sexp list
 | Closure of string list * exp * environment
@@ -64,8 +64,7 @@ let parse s = parse_with s sexp
 exception AstError of string
 let rec built_ast sexp = 
   match sexp with
-  | Procedure _ -> raise @@ AstError "Cannot build ast from procedure"
-  | Closure _ -> raise @@ AstError "Cannot built ast from closure"
+  | Closure _ | Primitive _ -> raise @@ AstError "Cannot build ast from function"
   | Quote _ | Number _ | Boolean _ -> Literal sexp
   | Symbol s -> Variable s
   | List [Symbol "if"; cond; iftrue; iffalse] ->
