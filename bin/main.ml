@@ -26,4 +26,5 @@ let rec repl env =
 ;;
     
 let () =
+  print_string "Welcome to tiny lisp. Try (env) to see a list of builtins";
   repl prelude_environment ;;   
