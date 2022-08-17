@@ -5,7 +5,9 @@ let rec repl env =
   print_string "> ";
   let input = read_line () in
   match parse input with
-  | Error msg -> Printf.eprintf "Error parsing string: %s" msg
+  | Error msg -> 
+    Printf.eprintf "Error parsing string: %s" msg;
+    repl env
   | Ok sexp ->
     try
     (
