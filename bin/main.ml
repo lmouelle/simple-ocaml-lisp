@@ -20,11 +20,12 @@ let rec repl env =
       print_newline ();
       repl env
     | SyntaxError s ->
-      print_string s;
+      print_string @@ "Error, proper format is " ^ s;
       print_newline ();
       repl env
 ;;
     
 let () =
   print_string "Welcome to tiny lisp. Try (env) to see a list of builtins";
+  print_newline ();
   repl prelude_environment ;;   
